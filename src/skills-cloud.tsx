@@ -21,6 +21,9 @@ const slugs = [
   "openai",
   "supabase",
   "reactquery",
+  "html5",
+  "css3",
+  "jquery",
 ]
 
 export function initSkillsCloud() {
