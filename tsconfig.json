@@ -9,6 +9,7 @@
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
     "useDefineForClassFields": true,
+    "jsx": "react-jsx",
     "skipLibCheck": true,
     "outDir": "./dist"
   },
