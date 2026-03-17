@@ -244,6 +244,23 @@
     });
   }
 
+  // For rich elements with HTML children (strong, em, br) — wraps each
+  // text node in a <span> and scrambles them independently so tags are preserved.
+  function scrambleTextNodes(el, baseDelay) {
+    if (el.dataset.scrambled) return;
+    el.dataset.scrambled = '1';
+    var delay = baseDelay || 0;
+    Array.from(el.childNodes).forEach(function (node) {
+      if (node.nodeType === 3 && node.textContent.trim()) {
+        var span = document.createElement('span');
+        span.textContent = node.textContent;
+        el.replaceChild(span, node);
+        playScramble(span, delay);
+        delay += 80;
+      }
+    });
+  }
+
   // ── Page-load: Hero elements ──────────────────────────────
   window.addEventListener('DOMContentLoaded', function () {
     const eyebrow = document.querySelector('.hero-eyebrow');
@@ -267,15 +284,29 @@
     document.querySelectorAll('.hero-desc em').forEach(function (em, i) {
       playScramble(em, 700 + i * 150);
     });
+
+    // Hero desc text nodes (preserves <em> and <br> tags)
+    const heroDesc = document.querySelector('.hero-desc');
+    if (heroDesc) scrambleTextNodes(heroDesc, 850);
+
+    // Hero CTA buttons
+    document.querySelectorAll('#hero .btn').forEach(function (btn, i) {
+      playScramble(btn, 1100 + i * 150);
+    });
   });
 
   // ── Scroll: IntersectionObserver ──────────────────────────
   var scrollGroups = [
     { selector: '.section-label', stagger: 0   },
     { selector: '.project-name',  stagger: 0   },
+    { selector: '.project-tag',   stagger: 0   },
     { selector: '.stat-num',      stagger: 100 },
+    { selector: '.stat-label',    stagger: 100 },
     { selector: '.skill-item',    stagger: 30  },
+    { selector: '.project-desc',  stagger: 0   },
+    { selector: '.pill',          stagger: 20  },
     { selector: '.contact-link',  stagger: 50  },
+    { selector: '.btn',           stagger: 100 },
   ];
 
   scrollGroups.forEach(function (group) {
@@ -303,6 +334,20 @@
       groupEls.forEach(function (el) { observer.observe(el); });
     });
   });
+
+  // .about-text has <strong> children — use scrambleTextNodes
+  var aboutText = document.querySelector('.about-text');
+  if (aboutText) {
+    var aboutObs = new IntersectionObserver(function (entries, obs) {
+      entries.forEach(function (entry) {
+        if (entry.isIntersecting) {
+          scrambleTextNodes(entry.target, 0);
+          obs.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.3 });
+    aboutObs.observe(aboutText);
+  }
 
 })();
 </script>
