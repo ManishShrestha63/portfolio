@@ -1,0 +1,862 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Manish Shrestha — Full Stack Developer</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=JetBrains+Mono:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #07090d;
+      --bg2: #0d1117;
+      --surface: #111820;
+      --border: rgba(255,255,255,0.06);
+      --accent: #00d4ff;
+      --accent2: #ffd166;
+      --text: #e8eaf0;
+      --text2: #7a8394;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'JetBrains Mono', monospace;
+      overflow-x: hidden;
+      cursor: none;
+    }
+
+    /* ── Custom Cursor ── */
+    .cursor {
+      position: fixed; width: 6px; height: 6px;
+      background: var(--accent); border-radius: 50%;
+      pointer-events: none; z-index: 9999;
+      transform: translate(-50%, -50%);
+      mix-blend-mode: screen; transition: transform 0.15s;
+    }
+    .cursor-ring {
+      position: fixed; width: 28px; height: 28px;
+      border: 1px solid rgba(0,212,255,0.4); border-radius: 50%;
+      pointer-events: none; z-index: 9998;
+      transform: translate(-50%, -50%);
+    }
+    a:hover ~ .cursor, button:hover ~ .cursor { transform: translate(-50%,-50%) scale(2.5); }
+
+    /* ── Background ── */
+    .bg-grid {
+      position: fixed; inset: 0;
+      background-image:
+        linear-gradient(rgba(0,212,255,0.025) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,212,255,0.025) 1px, transparent 1px);
+      background-size: 52px 52px;
+      pointer-events: none; z-index: 0;
+    }
+
+    /* Scanline */
+    body::after {
+      content: ''; position: fixed; inset: 0;
+      background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.04) 2px, rgba(0,0,0,0.04) 4px);
+      pointer-events: none; z-index: 1000;
+    }
+
+    /* ── Progress Line ── */
+    .progress-line {
+      position: fixed; left: 0; top: 0;
+      width: 2px; height: 0%;
+      background: linear-gradient(to bottom, var(--accent), var(--accent2));
+      z-index: 100; transition: height 0.08s;
+    }
+
+    /* ── Layout ── */
+    .layout { position: relative; }
+
+    /* ── Character Panel — full screen, fixed, centered ── */
+    .character-panel {
+      position: fixed;
+      inset: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: 1;
+      overflow: hidden;
+    }
+
+    #three-canvas { width: 100%; height: 100%; display: block; }
+
+    /* Bottom ambient glow under character */
+    .character-panel::before {
+      content: ''; position: absolute; inset: 0;
+      background: radial-gradient(ellipse at 50% 90%, rgba(0,212,255,0.07) 0%, transparent 60%);
+      pointer-events: none; z-index: 2;
+    }
+
+    /* ── Scrollable content — left column overlay ── */
+    .content {
+      position: relative;
+      z-index: 10;
+      width: 480px;
+      max-width: 48vw;
+      min-height: 100vh;
+      padding: 0 3rem 0 5rem;
+      /* Left-side frosted backdrop so text is readable over character */
+      background: linear-gradient(
+        to right,
+        rgba(7,9,13,0.92) 0%,
+        rgba(7,9,13,0.75) 70%,
+        rgba(7,9,13,0.0) 100%
+      );
+    }
+
+    /* Drop hint */
+    .drop-hint {
+      position: absolute; bottom: 5rem; left: 50%;
+      transform: translateX(-50%);
+      font-size: 9px; letter-spacing: 0.2em;
+      color: rgba(255,255,255,0.15);
+      text-transform: uppercase; z-index: 4;
+      text-align: center; line-height: 1.8;
+      pointer-events: none;
+    }
+
+    /* Status badge */
+    .status-badge {
+      position: absolute; bottom: 2rem; left: 50%;
+      transform: translateX(-50%);
+      display: flex; align-items: center; gap: 0.5rem;
+      background: rgba(0,212,255,0.07);
+      border: 1px solid rgba(0,212,255,0.2);
+      padding: 0.4rem 1.1rem; border-radius: 100px;
+      font-size: 10px; letter-spacing: 0.15em;
+      color: var(--accent); text-transform: uppercase;
+      z-index: 4; white-space: nowrap;
+    }
+    .status-dot {
+      width: 5px; height: 5px;
+      background: #00ff88; border-radius: 50%;
+      animation: blink 2s infinite;
+    }
+    @keyframes blink {
+      0%,100% { opacity: 1; } 50% { opacity: 0.3; }
+    }
+
+    /* Loading overlay */
+    .loading-screen {
+      position: absolute; inset: 0;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      gap: 1rem; z-index: 10;
+      background: var(--bg);
+      transition: opacity 0.6s, pointer-events 0.6s;
+    }
+    .loading-screen.hidden { opacity: 0; pointer-events: none; }
+    .loading-label { font-size: 10px; letter-spacing: 0.25em; color: var(--text2); text-transform: uppercase; }
+    .loading-track { width: 140px; height: 1px; background: rgba(255,255,255,0.08); border-radius: 1px; overflow: hidden; }
+    .loading-fill { height: 100%; width: 0%; background: var(--accent); transition: width 0.3s; border-radius: 1px; }
+    .loading-err { font-size: 10px; color: #ff6b6b; letter-spacing: 0.1em; text-align: center; display: none; }
+
+    /* ── Side Nav ── */
+    nav {
+      position: fixed; top: 50%; left: 2rem;
+      transform: translateY(-50%);
+      z-index: 50;
+      display: flex; flex-direction: column; gap: 1.2rem;
+    }
+    .nav-dot {
+      display: flex; align-items: center; gap: 0.75rem;
+      text-decoration: none; color: var(--text2);
+      font-size: 9px; letter-spacing: 0.15em;
+      text-transform: uppercase; transition: color 0.2s;
+      cursor: none;
+    }
+    .nav-dot::before {
+      content: ''; width: 4px; height: 4px;
+      background: currentColor; border-radius: 50%;
+      flex-shrink: 0; transition: transform 0.2s, background 0.2s;
+    }
+    .nav-dot:hover, .nav-dot.active { color: var(--accent); }
+    .nav-dot.active::before { transform: scale(2); }
+    .nav-dot span { opacity: 0; transition: opacity 0.2s; }
+    .nav-dot:hover span, .nav-dot.active span { opacity: 1; }
+
+    /* ── Sections ── */
+    section {
+      min-height: 100vh;
+      display: flex; flex-direction: column;
+      justify-content: center;
+      padding: 6rem 0;
+      position: relative;
+    }
+    section + section { border-top: 1px solid var(--border); }
+
+    .section-label {
+      font-size: 9px; letter-spacing: 0.35em;
+      color: var(--accent); text-transform: uppercase;
+      margin-bottom: 1.5rem;
+      display: flex; align-items: center; gap: 0.75rem;
+    }
+    .section-label::before { content: '//'; opacity: 0.5; }
+
+    /* ── Hero ── */
+    .hero-eyebrow {
+      font-size: 10px; letter-spacing: 0.2em;
+      color: var(--text2); text-transform: uppercase;
+      margin-bottom: 1.2rem;
+      display: flex; align-items: center; gap: 0.5rem;
+    }
+    .hero-eyebrow::before {
+      content: ''; display: inline-block;
+      width: 20px; height: 1px; background: var(--accent);
+    }
+
+    .hero-name {
+      font-family: 'Syne', sans-serif;
+      font-size: clamp(2.8rem, 4.5vw, 5rem);
+      font-weight: 800; line-height: 1.0;
+      letter-spacing: -0.03em; margin-bottom: 1.5rem;
+    }
+    .hero-name .line2 { color: var(--accent); }
+
+    .hero-desc {
+      font-size: 12px; color: var(--text2);
+      line-height: 2; max-width: 380px;
+      margin-bottom: 2.5rem;
+    }
+    .hero-desc em { color: var(--accent2); font-style: normal; font-weight: 500; }
+
+    .cta-row { display: flex; gap: 1rem; flex-wrap: wrap; }
+
+    .btn {
+      padding: 0.65rem 1.4rem;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px; letter-spacing: 0.12em;
+      text-transform: uppercase; text-decoration: none;
+      border-radius: 3px; transition: all 0.18s;
+      cursor: none; display: inline-block;
+    }
+    .btn-primary { background: var(--accent); color: #000; font-weight: 500; }
+    .btn-primary:hover { background: #fff; transform: translateY(-2px); }
+    .btn-ghost { border: 1px solid rgba(255,255,255,0.12); color: var(--text2); }
+    .btn-ghost:hover { border-color: var(--accent); color: var(--accent); transform: translateY(-2px); }
+
+    /* ── About ── */
+    .about-text {
+      font-size: 13px; line-height: 2.1;
+      color: var(--text2); max-width: 460px; margin-bottom: 2.5rem;
+    }
+    .about-text strong { color: var(--text); font-weight: 400; }
+
+    .stats-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; }
+
+    .stat {
+      padding: 1.5rem 1.25rem;
+      background: var(--surface);
+      border: 1px solid var(--border);
+    }
+    .stat:first-child { border-radius: 8px 0 0 8px; }
+    .stat:last-child { border-radius: 0 8px 8px 0; }
+
+    .stat-num {
+      font-family: 'Syne', sans-serif;
+      font-size: 2.2rem; font-weight: 700;
+      color: var(--accent); line-height: 1;
+      margin-bottom: 0.5rem;
+    }
+    .stat-label { font-size: 9px; letter-spacing: 0.18em; color: var(--text2); text-transform: uppercase; }
+
+    /* ── Skills ── */
+    .skills-grid {
+      display: grid; grid-template-columns: repeat(2, 1fr);
+      gap: 0.6rem;
+    }
+    .skill-item {
+      display: flex; align-items: center; gap: 0.75rem;
+      padding: 0.7rem 1rem;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 5px; font-size: 11px;
+      transition: border-color 0.2s, transform 0.2s, color 0.2s;
+      color: var(--text2);
+    }
+    .skill-item:hover { border-color: rgba(0,212,255,0.3); transform: translateX(5px); color: var(--text); }
+    .skill-icon { font-size: 14px; width: 18px; text-align: center; flex-shrink: 0; }
+
+    /* ── Projects ── */
+    .project-card {
+      padding: 1.5rem; background: var(--surface);
+      border: 1px solid var(--border); border-radius: 8px;
+      margin-bottom: 0.75rem; transition: border-color 0.2s, transform 0.2s;
+    }
+    .project-card:hover { border-color: rgba(0,212,255,0.18); transform: translateX(4px); }
+
+    .project-top {
+      display: flex; justify-content: space-between;
+      align-items: flex-start; margin-bottom: 0.6rem;
+    }
+    .project-name {
+      font-family: 'Syne', sans-serif;
+      font-size: 1rem; font-weight: 700;
+    }
+    .project-tag {
+      font-size: 8px; letter-spacing: 0.15em;
+      padding: 0.2rem 0.6rem;
+      border: 1px solid rgba(255,209,102,0.25);
+      color: var(--accent2); border-radius: 100px;
+      text-transform: uppercase;
+    }
+    .project-desc {
+      font-size: 11px; color: var(--text2);
+      line-height: 1.9; margin-bottom: 1rem;
+    }
+    .project-stack { display: flex; gap: 0.4rem; flex-wrap: wrap; }
+    .pill {
+      font-size: 8px; padding: 0.2rem 0.5rem;
+      background: rgba(0,212,255,0.06);
+      border: 1px solid rgba(0,212,255,0.12);
+      border-radius: 3px; color: var(--accent);
+      letter-spacing: 0.08em;
+    }
+
+    /* ── Contact ── */
+    .contact-grid { display: flex; flex-direction: column; gap: 0.6rem; max-width: 420px; }
+    .contact-link {
+      display: flex; align-items: center; gap: 1rem;
+      padding: 0.9rem 1.2rem;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 7px; text-decoration: none;
+      color: var(--text2); font-size: 11px;
+      transition: all 0.18s; cursor: none;
+    }
+    .contact-link:hover { border-color: rgba(0,212,255,0.3); color: var(--accent); transform: translateX(6px); }
+    .c-icon { width: 24px; text-align: center; font-size: 15px; opacity: 0.7; }
+
+    .footer-pad { height: 8rem; }
+
+    /* ── Mobile ── */
+    @media (max-width: 768px) {
+      .content { width: 100%; max-width: 100%; padding: 2rem 1.5rem;
+        background: linear-gradient(to bottom, rgba(7,9,13,0.95) 0%, rgba(7,9,13,0.85) 100%);
+      }
+      nav { display: none; }
+      .stats-row { grid-template-columns: 1fr 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Cursor -->
+<div class="cursor" id="cursor"></div>
+<div class="cursor-ring" id="cursorRing"></div>
+
+<!-- Background -->
+<div class="bg-grid"></div>
+<div class="progress-line" id="progressLine"></div>
+
+<!-- Side Navigation -->
+<nav id="sidenav">
+  <a href="#hero"     class="nav-dot active" data-section="hero">    <span>Home</span></a>
+  <a href="#about"    class="nav-dot"         data-section="about">   <span>About</span></a>
+  <a href="#skills"   class="nav-dot"         data-section="skills">  <span>Skills</span></a>
+  <a href="#projects" class="nav-dot"         data-section="projects"><span>Projects</span></a>
+  <a href="#contact"  class="nav-dot"         data-section="contact"> <span>Contact</span></a>
+</nav>
+
+<div class="layout">
+
+  <!-- ════ BACKGROUND: Fixed 3D Character (full screen) ════ -->
+  <div class="character-panel" id="charPanel">
+    <div class="loading-screen" id="loadingScreen">
+      <div class="loading-label" id="loadingLabel">Initializing avatar</div>
+      <div class="loading-track">
+        <div class="loading-fill" id="loadingFill"></div>
+      </div>
+      <div class="loading-err" id="loadingErr">
+        Could not load default model.<br>
+        Drag &amp; drop your own .vrm file here.
+      </div>
+    </div>
+    <canvas id="three-canvas"></canvas>
+    <div class="status-badge">
+      <div class="status-dot"></div>Open to opportunities
+    </div>
+  </div>
+
+  <!-- ════ FOREGROUND: Scrollable Portfolio Content ════ -->
+  <main class="content">
+
+    <!-- HERO -->
+    <section id="hero">
+      <div class="hero-eyebrow">Available for hire · Osaka, Japan</div>
+      <h1 class="hero-name">
+        Manish<br>
+        <span class="line2">Shrestha</span>
+      </h1>
+      <p class="hero-desc">
+        Full-Stack Developer with <em>7+ years</em> building web apps,
+        AI integrations, and SaaS platforms.<br>
+        TypeScript · React · Node.js · AWS · OpenAI
+      </p>
+      <div class="cta-row">
+        <a href="#projects" class="btn btn-primary">View Projects</a>
+        <a href="#contact"  class="btn btn-ghost">Get In Touch</a>
+      </div>
+    </section>
+
+    <!-- ABOUT -->
+    <section id="about">
+      <div class="section-label">About</div>
+      <p class="about-text">
+        Currently building AI-powered tools at <strong>Fules Design Co., Ltd.</strong>
+        in Osaka — an invoice fraud detection system and a social media SaaS integrating
+        12 platforms. I hold an <strong>MSc in Computer Science</strong> from Lincoln
+        University College, Malaysia, and previously worked at ICIMOD in Nepal.
+        <br><br>
+        I care deeply about clean architecture, developer experience, and shipping
+        products that actually work.
+      </p>
+      <div class="stats-row">
+        <div class="stat">
+          <div class="stat-num">7+</div>
+          <div class="stat-label">Years exp.</div>
+        </div>
+        <div class="stat">
+          <div class="stat-num">12</div>
+          <div class="stat-label">SNS APIs</div>
+        </div>
+        <div class="stat">
+          <div class="stat-num">10</div>
+          <div class="stat-label">Fraud types</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SKILLS -->
+    <section id="skills">
+      <div class="section-label">Tech Stack</div>
+      <div class="skills-grid">
+        <div class="skill-item"><span class="skill-icon">⚡</span>TypeScript</div>
+        <div class="skill-item"><span class="skill-icon">⚛</span>React / Next.js</div>
+        <div class="skill-item"><span class="skill-icon">🟢</span>Node.js</div>
+        <div class="skill-item"><span class="skill-icon">🍃</span>MongoDB / Redis</div>
+        <div class="skill-item"><span class="skill-icon">☁</span>AWS</div>
+        <div class="skill-item"><span class="skill-icon">🐍</span>FastAPI / Python</div>
+        <div class="skill-item"><span class="skill-icon">🤖</span>OpenAI API</div>
+        <div class="skill-item"><span class="skill-icon">💳</span>Stripe</div>
+        <div class="skill-item"><span class="skill-icon">🐘</span>PostgreSQL</div>
+        <div class="skill-item"><span class="skill-icon">🐳</span>Docker</div>
+        <div class="skill-item"><span class="skill-icon">📦</span>n8n / Automation</div>
+        <div class="skill-item"><span class="skill-icon">🔷</span>WordPress / PHP</div>
+      </div>
+    </section>
+
+    <!-- PROJECTS -->
+    <section id="projects">
+      <div class="section-label">Projects</div>
+
+      <div class="project-card">
+        <div class="project-top">
+          <div class="project-name">Invoice AI Check</div>
+          <div class="project-tag">Active</div>
+        </div>
+        <p class="project-desc">
+          AI-powered invoice fraud detection identifying 10 fraud categories using a
+          two-pass OpenAI detection pipeline. Built for Japanese enterprise clients
+          with a mobile companion app.
+        </p>
+        <div class="project-stack">
+          <span class="pill">Node.js</span><span class="pill">Next.js</span>
+          <span class="pill">FastAPI</span><span class="pill">OpenAI API</span>
+          <span class="pill">Supabase</span><span class="pill">React Native</span>
+        </div>
+      </div>
+
+      <div class="project-card">
+        <div class="project-top">
+          <div class="project-name">POSCOS / Post Controller</div>
+          <div class="project-tag">SaaS</div>
+        </div>
+        <p class="project-desc">
+          Social media management SaaS integrating 12 SNS channels. Real-time
+          scheduling, cross-platform publishing, analytics, and subscription billing.
+        </p>
+        <div class="project-stack">
+          <span class="pill">React 19</span><span class="pill">Node.js</span>
+          <span class="pill">MongoDB</span><span class="pill">Redis</span>
+          <span class="pill">Stripe</span>
+        </div>
+      </div>
+
+      <div class="project-card">
+        <div class="project-top">
+          <div class="project-name">Yayoi × freee Middleware</div>
+          <div class="project-tag">Integration</div>
+        </div>
+        <p class="project-desc">
+          Accounting middleware bridging Yayoi Sales and freee APIs for automated
+          invoice reconciliation and data sync for Japanese SMEs.
+        </p>
+        <div class="project-stack">
+          <span class="pill">Node.js</span><span class="pill">TypeScript</span>
+          <span class="pill">REST API</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- CONTACT -->
+    <section id="contact">
+      <div class="section-label">Contact</div>
+      <div class="contact-grid">
+        <a href="mailto:manish@example.com" class="contact-link">
+          <span class="c-icon">✉</span>manish@example.com
+        </a>
+        <a href="https://github.com/manish" class="contact-link">
+          <span class="c-icon">⌥</span>github.com/manish
+        </a>
+        <a href="https://linkedin.com/in/manish" class="contact-link">
+          <span class="c-icon">◈</span>linkedin.com/in/manish
+        </a>
+        <a href="https://findy-code.io" class="contact-link">
+          <span class="c-icon">◉</span>Findy / BizReach profile
+        </a>
+      </div>
+    </section>
+
+    <div class="footer-pad"></div>
+  </main>
+
+</div><!-- end layout -->
+
+
+<!-- ═══════════════════════════════════════════════
+     Three.js + @pixiv/three-vrm via CDN (importmap)
+     ═══════════════════════════════════════════════ -->
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.177.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.177.0/examples/jsm/",
+    "@pixiv/three-vrm": "https://cdn.jsdelivr.net/npm/@pixiv/three-vrm@3/lib/three-vrm.module.min.js"
+  }
+}
+</script>
+
+<script type="module">
+import * as THREE from 'three';
+import { GLTFLoader }            from 'three/addons/loaders/GLTFLoader.js';
+import { VRMLoaderPlugin, VRMUtils } from '@pixiv/three-vrm';
+
+// ─── DOM refs ────────────────────────────────────────────────
+const canvas        = document.getElementById('three-canvas');
+const panel         = document.getElementById('charPanel');
+const loadingScreen = document.getElementById('loadingScreen');
+const loadingFill   = document.getElementById('loadingFill');
+const loadingLabel  = document.getElementById('loadingLabel');
+const loadingErr    = document.getElementById('loadingErr');
+const progressLine  = document.getElementById('progressLine');
+const cursorEl      = document.getElementById('cursor');
+const cursorRing    = document.getElementById('cursorRing');
+
+// ─── Renderer ────────────────────────────────────────────────
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.setClearColor(0x000000, 0);
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+
+// ─── Scene & Camera ──────────────────────────────────────────
+const scene  = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(28, window.innerWidth / window.innerHeight, 0.1, 20);
+// Shift camera left so character appears on the right half of the screen
+// (content column occupies the left ~480px, character fills the right side)
+camera.position.set(-0.7, 1.35, 4.2);
+camera.lookAt(0, 0.5, 0);
+
+// ─── Lighting ────────────────────────────────────────────────
+scene.add(new THREE.AmbientLight(0xffffff, 0.7));
+
+const dirLight = new THREE.DirectionalLight(0x88ddff, 1.4);
+dirLight.position.set(1.5, 3, 2.5);
+scene.add(dirLight);
+
+const fillLight = new THREE.DirectionalLight(0xffd166, 0.45);
+fillLight.position.set(-2, 1, 1);
+scene.add(fillLight);
+
+const rimLight = new THREE.DirectionalLight(0x00aaff, 0.3);
+rimLight.position.set(0, 4, -3);
+scene.add(rimLight);
+
+// ─── State ───────────────────────────────────────────────────
+let vrm          = null;
+let clock        = new THREE.Clock();
+let mouse        = { x: 0, y: 0 };
+let scrollPct    = 0;
+
+// ─── LookAt: drive yaw/pitch directly, no Object3D needed ───
+// Bypass vrm.lookAt.target entirely (avoids getWorldPosition error).
+// We compute yaw/pitch from mouse position and call applier.applyYawPitch().
+let targetYaw   = 0;  // degrees, positive = look right
+let targetPitch = 0;  // degrees, positive = look up
+let smoothYaw   = 0;
+let smoothPitch = 0;
+
+// ─── Custom cursor ───────────────────────────────────────────
+let ringPos = { x: innerWidth / 2, y: innerHeight / 2 };
+let rawPos  = { x: innerWidth / 2, y: innerHeight / 2 };
+
+document.addEventListener('mousemove', e => {
+  rawPos.x = e.clientX; rawPos.y = e.clientY;
+  cursorEl.style.left = e.clientX + 'px';
+  cursorEl.style.top  = e.clientY + 'px';
+
+  // Map mouse to eye angles (character faces camera so yaw is negated)
+  const nx = (e.clientX / innerWidth)  *  2 - 1;  // -1 left, +1 right
+  const ny = (e.clientY / innerHeight) * -2 + 1;  // -1 bottom, +1 top
+
+  targetYaw   = nx * -25;   // ±25° horizontal
+  targetPitch = ny *  15;   // ±15° vertical
+});
+
+(function ringLoop() {
+  ringPos.x += (rawPos.x - ringPos.x) * 0.1;
+  ringPos.y += (rawPos.y - ringPos.y) * 0.1;
+  cursorRing.style.left = ringPos.x + 'px';
+  cursorRing.style.top  = ringPos.y + 'px';
+  requestAnimationFrame(ringLoop);
+})();
+
+// ─── Scroll tracking ─────────────────────────────────────────
+window.addEventListener('scroll', () => {
+  const maxScroll = document.body.scrollHeight - innerHeight;
+  scrollPct = maxScroll > 0 ? scrollY / maxScroll : 0;
+  progressLine.style.height = (scrollPct * 100) + '%';
+
+  // Active nav dot
+  let active = 'hero';
+  document.querySelectorAll('section').forEach(s => {
+    if (s.getBoundingClientRect().top <= innerHeight * 0.55) active = s.id;
+  });
+  document.querySelectorAll('.nav-dot').forEach(d => {
+    d.classList.toggle('active', d.dataset.section === active);
+  });
+});
+
+// ─── VRM Loader helper ───────────────────────────────────────
+const loader = new GLTFLoader();
+loader.register(parser => new VRMLoaderPlugin(parser));
+
+async function loadVRM(url) {
+  // Reset UI
+  loadingErr.style.display = 'none';
+  loadingFill.style.width  = '0%';
+  loadingLabel.textContent = 'Fetching avatar';
+  loadingScreen.classList.remove('hidden');
+
+  // Remove previous model
+  if (vrm) { scene.remove(vrm.scene); VRMUtils.deepDispose(vrm.scene); vrm = null; }
+
+  try {
+    // KEY FIX: fetch as ArrayBuffer first — avoids the DataCloneError
+    // that happens when GLTFLoader tries to pass a Request into a Worker
+    const res = await fetch(url);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+    const total = parseInt(res.headers.get('content-length') || '0');
+    const reader = res.body.getReader();
+    const chunks = [];
+    let loaded = 0;
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      chunks.push(value);
+      loaded += value.length;
+      const pct = total ? (loaded / total) * 100 : 50;
+      loadingFill.style.width = Math.min(pct, 92) + '%';
+      loadingLabel.textContent = 'Downloading avatar';
+    }
+
+    // Combine chunks into a single ArrayBuffer
+    const combined = new Uint8Array(loaded);
+    let offset = 0;
+    for (const chunk of chunks) { combined.set(chunk, offset); offset += chunk.length; }
+
+    loadingLabel.textContent = 'Parsing model';
+    loadingFill.style.width  = '95%';
+
+    // Parse directly from ArrayBuffer — no Worker, no postMessage
+    const gltf = await new Promise((resolve, reject) => {
+      loader.parse(combined.buffer, '', resolve, reject);
+    });
+
+    const model = gltf.userData.vrm;
+    if (!model) throw new Error('Not a valid VRM file');
+
+    // Optimise
+    try { VRMUtils.removeUnnecessaryJoints(gltf.scene); } catch(e) {}
+    try { VRMUtils.removeUnnecessaryVertices(gltf.scene); } catch(e) {}
+
+    vrm = model;
+    scene.add(vrm.scene);
+
+    // Disable built-in target tracking — we drive yaw/pitch manually
+    if (vrm.lookAt) {
+      vrm.lookAt.autoUpdate = false;
+      vrm.lookAt.target     = null;
+    }
+
+    // VRM faces +Z by default; flip to face camera
+    vrm.scene.rotation.y = Math.PI;
+    vrm.scene.position.set(0, -0.9, 0);
+
+    loadingFill.style.width = '100%';
+    setTimeout(() => loadingScreen.classList.add('hidden'), 300);
+
+  } catch (err) {
+    console.error('VRM load error:', err);
+    throw err; // let caller handle fallback
+  }
+}
+
+function showError() {
+  loadingFill.style.background = '#ff4444';
+  loadingFill.style.width      = '100%';
+  loadingLabel.textContent     = 'Default model unavailable';
+  loadingErr.style.display     = 'block';
+}
+
+// Try multiple VRM URLs in order — first one that works wins
+const VRM_URLS = [
+  'https://pixiv.github.io/three-vrm/packages/three-vrm/examples/models/VRM1_Constraint_Twist_Sample.vrm',
+  'https://cdn.jsdelivr.net/gh/pixiv/three-vrm/packages/three-vrm/examples/models/VRM1_Constraint_Twist_Sample.vrm',
+  'https://raw.githubusercontent.com/pixiv/three-vrm/dev/packages/three-vrm/examples/models/VRM1_Constraint_Twist_Sample.vrm',
+];
+
+(async () => {
+  for (const url of VRM_URLS) {
+    try {
+      await loadVRM(url);
+      return; // success — stop trying
+    } catch (e) {
+      console.warn('Trying next VRM URL…', e.message);
+    }
+  }
+  showError(); // all URLs failed
+})();
+
+// ─── Drag & Drop support ─────────────────────────────────────
+panel.addEventListener('dragover',  e => { e.preventDefault(); panel.style.outline = '2px dashed rgba(0,212,255,0.4)'; });
+panel.addEventListener('dragleave', () => { panel.style.outline = ''; });
+panel.addEventListener('drop', e => {
+  e.preventDefault();
+  panel.style.outline = '';
+  const file = e.dataTransfer.files[0];
+  if (file && (file.name.endsWith('.vrm') || file.name.endsWith('.glb'))) {
+    // Read file as ArrayBuffer directly — no fetch needed for local files
+    const reader = new FileReader();
+    reader.onload = async () => {
+      try {
+        loadingErr.style.display = 'none';
+        loadingFill.style.width  = '0%';
+        loadingLabel.textContent = 'Parsing dropped model';
+        loadingScreen.classList.remove('hidden');
+
+        if (vrm) { scene.remove(vrm.scene); VRMUtils.deepDispose(vrm.scene); vrm = null; }
+
+        loadingFill.style.width = '60%';
+        const gltf = await new Promise((resolve, reject) => {
+          loader.parse(reader.result, '', resolve, reject);
+        });
+        const model = gltf.userData.vrm;
+        if (!model) throw new Error('Not a VRM');
+        try { VRMUtils.removeUnnecessaryJoints(gltf.scene); } catch(e) {}
+        try { VRMUtils.removeUnnecessaryVertices(gltf.scene); } catch(e) {}
+        vrm = model;
+        scene.add(vrm.scene);
+        if (vrm.lookAt) { vrm.lookAt.autoUpdate = false; vrm.lookAt.target = null; }
+        vrm.scene.rotation.y = Math.PI;
+        vrm.scene.position.set(0, -0.9, 0);
+        loadingFill.style.width = '100%';
+        setTimeout(() => loadingScreen.classList.add('hidden'), 300);
+      } catch(err) {
+        console.error(err); showError();
+      }
+    };
+    reader.readAsArrayBuffer(file);
+  }
+});
+
+// ─── Render loop ─────────────────────────────────────────────
+function lerp(a, b, t) { return a + (b - a) * t; }
+
+let idleT = 0;
+
+function animate() {
+  requestAnimationFrame(animate);
+  const dt      = clock.getDelta();
+  const elapsed = clock.getElapsedTime();
+  idleT += dt;
+
+  if (vrm) {
+    // 1. Smooth eye/head yaw+pitch from mouse, apply via applier (no target Object3D needed)
+    smoothYaw   += (targetYaw   - smoothYaw)   * Math.min(dt * 6, 1);
+    smoothPitch += (targetPitch - smoothPitch) * Math.min(dt * 6, 1);
+
+    if (vrm.lookAt && vrm.lookAt.applier) {
+      vrm.lookAt.applier.applyYawPitch(smoothYaw, smoothPitch);
+    }
+
+    // 2. Idle breathing (subtle Y bob)
+    vrm.scene.position.y = -0.9 + Math.sin(elapsed * 1.1) * 0.005;
+
+    // 3. Idle sway (slow rotation)
+    vrm.scene.rotation.y = Math.PI + Math.sin(elapsed * 0.35) * 0.025;
+
+    // 4. Scroll → head tilt (looks up when at top, neutral at mid, down at bottom)
+    if (vrm.humanoid) {
+      const headTilt = (scrollPct - 0.5) * 0.25;
+
+      const head = vrm.humanoid.getNormalizedBoneNode('head');
+      if (head) head.rotation.x = lerp(head.rotation.x, headTilt * 0.6, dt * 2);
+
+      const neck = vrm.humanoid.getNormalizedBoneNode('neck');
+      if (neck) neck.rotation.x = lerp(neck.rotation.x, headTilt * 0.3, dt * 2);
+
+      const spine = vrm.humanoid.getNormalizedBoneNode('spine');
+      if (spine) spine.rotation.x = lerp(spine.rotation.x, headTilt * 0.15, dt * 1.5);
+    }
+
+    // 5. Update VRM — kill lookAt target/autoUpdate every frame before updating
+    //    so the internal getWorldPosition call never fires regardless of model defaults
+    if (vrm.lookAt) {
+      vrm.lookAt.target     = null;   // null target → internal "if (target && autoUpdate)" is false
+      vrm.lookAt.autoUpdate = false;
+    }
+    vrm.update(dt);
+  }
+
+  renderer.render(scene, camera);
+}
+
+animate();
+
+// ─── Resize ──────────────────────────────────────────────────
+window.addEventListener('resize', () => {
+  const w = window.innerWidth;
+  const h = window.innerHeight;
+  camera.aspect = w / h;
+  camera.updateProjectionMatrix();
+  renderer.setSize(w, h);
+});
+
+// ─── Smooth scroll for anchor links ──────────────────────────
+document.querySelectorAll('a[href^="#"]').forEach(a => {
+  a.addEventListener('click', e => {
+    e.preventDefault();
+    document.querySelector(a.getAttribute('href'))?.scrollIntoView({ behavior: 'smooth' });
+  });
+});
+</script>
+
+</body>
+</html>
