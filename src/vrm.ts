@@ -101,15 +101,15 @@ export function initVRM(): void {
     loadingLabel.textContent = 'Parsing model'
     loadingFill.style.width  = '95%'
 
-    const gltf = await new Promise<{ userData: { vrm: VRM } }>((resolve, reject) => {
+    const gltf = await new Promise<{ scene: THREE.Group; userData: { vrm: VRM } }>((resolve, reject) => {
       loader.parse(combined.buffer, '', resolve as never, reject)
     })
 
     const model = gltf.userData.vrm
     if (!model) throw new Error('Not a valid VRM file')
 
-    try { VRMUtils.removeUnnecessaryJoints(gltf.scene as never) } catch (_) {}
-    try { VRMUtils.removeUnnecessaryVertices(gltf.scene as never) } catch (_) {}
+    try { VRMUtils.removeUnnecessaryJoints(gltf.scene as never) } catch (_e) {}
+    try { VRMUtils.removeUnnecessaryVertices(gltf.scene as never) } catch (_e) {}
 
     vrm = model
     scene.add(vrm.scene)
@@ -158,13 +158,13 @@ export function initVRM(): void {
         loadingScreen.classList.remove('hidden')
         if (vrm) { scene.remove(vrm.scene); VRMUtils.deepDispose(vrm.scene); vrm = null }
         loadingFill.style.width = '60%'
-        const gltf = await new Promise<{ userData: { vrm: VRM } }>((resolve, reject) => {
+        const gltf = await new Promise<{ scene: THREE.Group; userData: { vrm: VRM } }>((resolve, reject) => {
           loader.parse(fileReader.result as ArrayBuffer, '', resolve as never, reject)
         })
         const model = gltf.userData.vrm
         if (!model) throw new Error('Not a VRM')
-        try { VRMUtils.removeUnnecessaryJoints(gltf.scene as never) } catch (_) {}
-        try { VRMUtils.removeUnnecessaryVertices(gltf.scene as never) } catch (_) {}
+        try { VRMUtils.removeUnnecessaryJoints(gltf.scene as never) } catch (_e) {}
+        try { VRMUtils.removeUnnecessaryVertices(gltf.scene as never) } catch (_e) {}
         vrm = model
         scene.add(vrm.scene)
         if (vrm.lookAt) { vrm.lookAt.autoUpdate = false; vrm.lookAt.target = null }
