@@ -115,7 +115,7 @@ export function initVRM(): void {
     scene.add(vrm.scene)
 
     if (vrm.lookAt) { vrm.lookAt.autoUpdate = false; vrm.lookAt.target = null }
-    vrm.scene.rotation.y = Math.PI
+    vrm.scene.rotation.y = 0
     vrm.scene.position.set(0, -0.9, 0)
 
     loadingFill.style.width = '100%'
@@ -168,7 +168,7 @@ export function initVRM(): void {
         vrm = model
         scene.add(vrm.scene)
         if (vrm.lookAt) { vrm.lookAt.autoUpdate = false; vrm.lookAt.target = null }
-        vrm.scene.rotation.y = Math.PI
+        vrm.scene.rotation.y = 0
         vrm.scene.position.set(0, -0.9, 0)
         loadingFill.style.width = '100%'
         setTimeout(() => loadingScreen.classList.add('hidden'), 300)
@@ -190,7 +190,7 @@ export function initVRM(): void {
       smoothPitch += (targetPitch - smoothPitch) * Math.min(dt * 6, 1)
 
       vrm.scene.position.y = -0.9 + Math.sin(elapsed * 1.1) * 0.005
-      vrm.scene.rotation.y = Math.PI + Math.sin(elapsed * 0.35) * 0.025
+      vrm.scene.rotation.y = Math.sin(elapsed * 0.35) * 0.025
 
       if (vrm.humanoid) {
         const headTilt  = (scrollPct - 0.5) * 0.25
