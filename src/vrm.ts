@@ -3,9 +3,7 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js'
 import { VRMLoaderPlugin, VRMUtils, VRM } from '@pixiv/three-vrm'
 
 const VRM_URLS = [
-  'https://pixiv.github.io/three-vrm/packages/three-vrm/examples/models/VRM1_Constraint_Twist_Sample.vrm',
-  'https://cdn.jsdelivr.net/gh/pixiv/three-vrm/packages/three-vrm/examples/models/VRM1_Constraint_Twist_Sample.vrm',
-  'https://raw.githubusercontent.com/pixiv/three-vrm/dev/packages/three-vrm/examples/models/VRM1_Constraint_Twist_Sample.vrm',
+  '/portfolio/models/character.vrm',
 ]
 
 export function initVRM(): void {
