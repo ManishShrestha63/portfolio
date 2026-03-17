@@ -191,6 +191,121 @@
 
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/animejs@3.2.2/lib/anime.min.js"></script>
+<script>
+(function () {
+  // ── ScrambleText ──────────────────────────────────────────
+  const POOL = '!@#$%^&*<>{}[]0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+
+  function randomChar() {
+    return POOL[Math.floor(Math.random() * POOL.length)];
+  }
+
+  function scrambleFrame(el, progress) {
+    const original = el.dataset.scramble;
+    if (!original) return;
+    const resolved = Math.floor(progress * original.length);
+    let out = '';
+    for (let i = 0; i < original.length; i++) {
+      if (i < resolved) {
+        out += original[i];
+      } else if (original[i] === ' ' || original[i] === '\n') {
+        out += original[i];
+      } else {
+        out += randomChar();
+      }
+    }
+    el.textContent = out;
+  }
+
+  function playScramble(el, delay) {
+    if (el.dataset.scrambled) return;
+    el.dataset.scrambled = '1';
+
+    const original = el.textContent.trim();
+    el.dataset.scramble = original;
+    el.style.minWidth = el.offsetWidth + 'px';
+    el.style.display = el.style.display || 'inline-block';
+
+    const duration = Math.max(500, Math.min(original.length * 35, 1000));
+
+    anime({
+      targets: el,
+      duration: duration,
+      delay: delay || 0,
+      easing: 'linear',
+      opacity: [1, 1],
+      update: function (anim) {
+        scrambleFrame(el, anim.progress / 100);
+      },
+      complete: function () {
+        el.textContent = original;
+      }
+    });
+  }
+
+  // ── Page-load: Hero elements ──────────────────────────────
+  window.addEventListener('DOMContentLoaded', function () {
+    const eyebrow = document.querySelector('.hero-eyebrow');
+    if (eyebrow) playScramble(eyebrow, 200);
+
+    const heroName = document.querySelector('.hero-name');
+    if (heroName) {
+      const firstNode = Array.from(heroName.childNodes).find(function(n) {
+        return n.nodeType === 3 && n.textContent.trim();
+      });
+      if (firstNode) {
+        const wrapper = document.createElement('span');
+        wrapper.textContent = firstNode.textContent.trim();
+        heroName.replaceChild(wrapper, firstNode);
+        playScramble(wrapper, 400);
+      }
+      const line2 = heroName.querySelector('.line2');
+      if (line2) playScramble(line2, 600);
+    }
+
+    document.querySelectorAll('.hero-desc em').forEach(function (em, i) {
+      playScramble(em, 700 + i * 150);
+    });
+  });
+
+  // ── Scroll: IntersectionObserver ──────────────────────────
+  var scrollGroups = [
+    { selector: '.section-label', stagger: 0   },
+    { selector: '.project-name',  stagger: 0   },
+    { selector: '.stat-num',      stagger: 100 },
+    { selector: '.skill-item',    stagger: 30  },
+    { selector: '.contact-link',  stagger: 50  },
+  ];
+
+  scrollGroups.forEach(function (group) {
+    var els = Array.from(document.querySelectorAll(group.selector));
+
+    var sections = {};
+    els.forEach(function (el) {
+      var sec = el.closest('section') || document.body;
+      var key = sec.id || 'root';
+      if (!sections[key]) sections[key] = [];
+      sections[key].push(el);
+    });
+
+    Object.values(sections).forEach(function (groupEls) {
+      var observer = new IntersectionObserver(function (entries, obs) {
+        entries.forEach(function (entry) {
+          if (entry.isIntersecting) {
+            var idx = groupEls.indexOf(entry.target);
+            playScramble(entry.target, idx * group.stagger);
+            obs.unobserve(entry.target);
+          }
+        });
+      }, { threshold: 0.3 });
+
+      groupEls.forEach(function (el) { observer.observe(el); });
+    });
+  });
+
+})();
+</script>
 <script type="module" src="/src/main.ts"></script>
 </body>
 </html>
