@@ -9,6 +9,15 @@
 </head>
 <body>
 
+<!-- Page Loader -->
+<div id="page-loader" style="position:fixed;inset:0;z-index:99999;background:#07090d;display:flex;align-items:center;justify-content:center;">
+  <div class="pl-inner">
+    <div class="pl-name">MANISH SHRESTHA</div>
+    <div class="pl-bar-track"><div class="pl-bar-fill" id="plBarFill"></div></div>
+    <div class="pl-label" id="plLabel">Initializing</div>
+  </div>
+</div>
+
 <!-- Cursor -->
 <div class="cursor" id="cursor"></div>
 <div class="cursor-ring" id="cursorRing"></div>
@@ -51,7 +60,7 @@
 
     <!-- HERO -->
     <section id="hero">
-      <div class="hero-eyebrow">Available for hire · Osaka, Japan</div>
+      <div class="hero-eyebrow">Available for hire</div>
       <h1 class="hero-name">
         Manish<br>
         <span class="line2">Shrestha</span>
@@ -104,52 +113,13 @@
     <!-- PROJECTS -->
     <section id="projects">
       <div class="section-label">Projects</div>
-
-      <div class="project-card">
-        <div class="project-top">
-          <div class="project-name">Invoice AI Check</div>
-          <div class="project-tag">Active</div>
-        </div>
-        <p class="project-desc">
-          AI-powered invoice fraud detection identifying 10 fraud categories using a
-          two-pass OpenAI detection pipeline. Built for Japanese enterprise clients
-          with a mobile companion app.
-        </p>
-        <div class="project-stack">
-          <span class="pill">Node.js</span><span class="pill">Next.js</span>
-          <span class="pill">FastAPI</span><span class="pill">OpenAI API</span>
-          <span class="pill">Supabase</span><span class="pill">React Native</span>
-        </div>
-      </div>
-
-      <div class="project-card">
-        <div class="project-top">
-          <div class="project-name">POSCOS / Post Controller</div>
-          <div class="project-tag">SaaS</div>
-        </div>
-        <p class="project-desc">
-          Social media management SaaS integrating 12 SNS channels. Real-time
-          scheduling, cross-platform publishing, analytics, and subscription billing.
-        </p>
-        <div class="project-stack">
-          <span class="pill">React 19</span><span class="pill">Node.js</span>
-          <span class="pill">MongoDB</span><span class="pill">Redis</span>
-          <span class="pill">Stripe</span>
-        </div>
-      </div>
-
-      <div class="project-card">
-        <div class="project-top">
-          <div class="project-name">Yayoi × freee Middleware</div>
-          <div class="project-tag">Integration</div>
-        </div>
-        <p class="project-desc">
-          Accounting middleware bridging Yayoi Sales and freee APIs for automated
-          invoice reconciliation and data sync for Japanese SMEs.
-        </p>
-        <div class="project-stack">
-          <span class="pill">Node.js</span><span class="pill">TypeScript</span>
-          <span class="pill">REST API</span>
+      <div class="ps-wrapper">
+        <div id="project-stack" class="ps-stack-area"></div>
+        <div class="ps-footer">
+          <button id="ps-next-btn" class="ps-next-btn">
+            Next Project
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="square"><path d="M9.5 18L15.5 12L9.5 6"/></svg>
+          </button>
         </div>
       </div>
     </section>
@@ -253,21 +223,6 @@
     const eyebrow = document.querySelector('.hero-eyebrow');
     if (eyebrow) playScramble(eyebrow, 200);
 
-    const heroName = document.querySelector('.hero-name');
-    if (heroName) {
-      const firstNode = Array.from(heroName.childNodes).find(function(n) {
-        return n.nodeType === 3 && n.textContent.trim();
-      });
-      if (firstNode) {
-        const wrapper = document.createElement('span');
-        wrapper.textContent = firstNode.textContent.trim();
-        heroName.replaceChild(wrapper, firstNode);
-        playScramble(wrapper, 400);
-      }
-      const line2 = heroName.querySelector('.line2');
-      if (line2) playScramble(line2, 600);
-    }
-
     document.querySelectorAll('.hero-desc em').forEach(function (em, i) {
       playScramble(em, 700 + i * 150);
     });
@@ -284,11 +239,8 @@
 
   // ── Scroll: IntersectionObserver ──────────────────────────
   var scrollGroups = [
-    { selector: '.section-label', stagger: 0   },
     { selector: '.project-name',  stagger: 0   },
     { selector: '.project-tag',   stagger: 0   },
-    { selector: '.stat-num',      stagger: 100 },
-    { selector: '.stat-label',    stagger: 100 },
     { selector: '.skill-item',    stagger: 30  },
     { selector: '.project-desc',  stagger: 0   },
     { selector: '.pill',          stagger: 20  },
@@ -337,6 +289,36 @@
   }
 
 })();
+</script>
+<script>
+(function () {
+  var loader  = document.getElementById('page-loader')
+  var fill    = document.getElementById('plBarFill')
+  var label   = document.getElementById('plLabel')
+
+  // Mirror VRM loading fill/label into page loader
+  var vrmFill  = document.getElementById('loadingFill')
+  var vrmLabel = document.getElementById('loadingLabel')
+
+  if (vrmFill && fill) {
+    var mo = new MutationObserver(function () {
+      fill.style.width = vrmFill.style.width
+    })
+    mo.observe(vrmFill, { attributes: true, attributeFilter: ['style'] })
+  }
+  if (vrmLabel && label) {
+    var lo = new MutationObserver(function () {
+      label.textContent = vrmLabel.textContent
+    })
+    lo.observe(vrmLabel, { childList: true, characterData: true, subtree: true })
+  }
+
+  document.addEventListener('vrm:ready', function () {
+    if (!loader) return
+    loader.classList.add('pl-done')
+    setTimeout(function () { loader.remove() }, 800)
+  })
+})()
 </script>
 <script type="module" src="/src/main.ts"></script>
 </body>
