@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Manish Shrestha — Full Stack Developer</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=JetBrains+Mono:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<!-- Cursor -->
+<div class="cursor" id="cursor"></div>
+<div class="cursor-ring" id="cursorRing"></div>
+
+<!-- Background -->
+<div class="bg-grid"></div>
+<div class="progress-line" id="progressLine"></div>
+
+<!-- Side Navigation -->
+<nav id="sidenav">
+  <a href="#hero"     class="nav-dot active" data-section="hero">    <span>Home</span></a>
+  <a href="#about"    class="nav-dot"         data-section="about">   <span>About</span></a>
+  <a href="#skills"   class="nav-dot"         data-section="skills">  <span>Skills</span></a>
+  <a href="#projects" class="nav-dot"         data-section="projects"><span>Projects</span></a>
+  <a href="#contact"  class="nav-dot"         data-section="contact"> <span>Contact</span></a>
+</nav>
+
+<div class="layout">
+
+  <!-- BACKGROUND: Fixed 3D Character (full screen) -->
+  <div class="character-panel" id="charPanel">
+    <div class="loading-screen" id="loadingScreen">
+      <div class="loading-label" id="loadingLabel">Initializing avatar</div>
+      <div class="loading-track">
+        <div class="loading-fill" id="loadingFill"></div>
+      </div>
+      <div class="loading-err" id="loadingErr">
+        Could not load default model.<br>
+        Drag &amp; drop your own .vrm file here.
+      </div>
+    </div>
+    <canvas id="three-canvas"></canvas>
+    <div class="status-badge">
+      <div class="status-dot"></div>Open to opportunities
+    </div>
+  </div>
+
+  <!-- FOREGROUND: Scrollable Portfolio Content -->
+  <main class="content">
+
+    <!-- HERO -->
+    <section id="hero">
+      <div class="hero-eyebrow">Available for hire · Osaka, Japan</div>
+      <h1 class="hero-name">
+        Manish<br>
+        <span class="line2">Shrestha</span>
+      </h1>
+      <p class="hero-desc">
+        Full-Stack Developer with <em>7+ years</em> building web apps,
+        AI integrations, and SaaS platforms.<br>
+        TypeScript · React · Node.js · AWS · OpenAI
+      </p>
+      <div class="cta-row">
+        <a href="#projects" class="btn btn-primary">View Projects</a>
+        <a href="#contact"  class="btn btn-ghost">Get In Touch</a>
+      </div>
+    </section>
+
+    <!-- ABOUT -->
+    <section id="about">
+      <div class="section-label">About</div>
+      <p class="about-text">
+        Currently building AI-powered tools at <strong>Fules Design Co., Ltd.</strong>
+        in Osaka — an invoice fraud detection system and a social media SaaS integrating
+        12 platforms. I hold an <strong>MSc in Computer Science</strong> from Lincoln
+        University College, Malaysia, and previously worked at ICIMOD in Nepal.
+        <br><br>
+        I care deeply about clean architecture, developer experience, and shipping
+        products that actually work.
+      </p>
+      <div class="stats-row">
+        <div class="stat">
+          <div class="stat-num">7+</div>
+          <div class="stat-label">Years exp.</div>
+        </div>
+        <div class="stat">
+          <div class="stat-num">12</div>
+          <div class="stat-label">SNS APIs</div>
+        </div>
+        <div class="stat">
+          <div class="stat-num">10</div>
+          <div class="stat-label">Fraud types</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SKILLS -->
+    <section id="skills">
+      <div class="section-label">Tech Stack</div>
+      <div class="skills-grid">
+        <div class="skill-item"><span class="skill-icon">⚡</span>TypeScript</div>
+        <div class="skill-item"><span class="skill-icon">⚛</span>React / Next.js</div>
+        <div class="skill-item"><span class="skill-icon">🟢</span>Node.js</div>
+        <div class="skill-item"><span class="skill-icon">🍃</span>MongoDB / Redis</div>
+        <div class="skill-item"><span class="skill-icon">☁</span>AWS</div>
+        <div class="skill-item"><span class="skill-icon">🐍</span>FastAPI / Python</div>
+        <div class="skill-item"><span class="skill-icon">🤖</span>OpenAI API</div>
+        <div class="skill-item"><span class="skill-icon">💳</span>Stripe</div>
+        <div class="skill-item"><span class="skill-icon">🐘</span>PostgreSQL</div>
+        <div class="skill-item"><span class="skill-icon">🐳</span>Docker</div>
+        <div class="skill-item"><span class="skill-icon">📦</span>n8n / Automation</div>
+        <div class="skill-item"><span class="skill-icon">🔷</span>WordPress / PHP</div>
+      </div>
+    </section>
+
+    <!-- PROJECTS -->
+    <section id="projects">
+      <div class="section-label">Projects</div>
+
+      <div class="project-card">
+        <div class="project-top">
+          <div class="project-name">Invoice AI Check</div>
+          <div class="project-tag">Active</div>
+        </div>
+        <p class="project-desc">
+          AI-powered invoice fraud detection identifying 10 fraud categories using a
+          two-pass OpenAI detection pipeline. Built for Japanese enterprise clients
+          with a mobile companion app.
+        </p>
+        <div class="project-stack">
+          <span class="pill">Node.js</span><span class="pill">Next.js</span>
+          <span class="pill">FastAPI</span><span class="pill">OpenAI API</span>
+          <span class="pill">Supabase</span><span class="pill">React Native</span>
+        </div>
+      </div>
+
+      <div class="project-card">
+        <div class="project-top">
+          <div class="project-name">POSCOS / Post Controller</div>
+          <div class="project-tag">SaaS</div>
+        </div>
+        <p class="project-desc">
+          Social media management SaaS integrating 12 SNS channels. Real-time
+          scheduling, cross-platform publishing, analytics, and subscription billing.
+        </p>
+        <div class="project-stack">
+          <span class="pill">React 19</span><span class="pill">Node.js</span>
+          <span class="pill">MongoDB</span><span class="pill">Redis</span>
+          <span class="pill">Stripe</span>
+        </div>
+      </div>
+
+      <div class="project-card">
+        <div class="project-top">
+          <div class="project-name">Yayoi × freee Middleware</div>
+          <div class="project-tag">Integration</div>
+        </div>
+        <p class="project-desc">
+          Accounting middleware bridging Yayoi Sales and freee APIs for automated
+          invoice reconciliation and data sync for Japanese SMEs.
+        </p>
+        <div class="project-stack">
+          <span class="pill">Node.js</span><span class="pill">TypeScript</span>
+          <span class="pill">REST API</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- CONTACT -->
+    <section id="contact">
+      <div class="section-label">Contact</div>
+      <div class="contact-grid">
+        <a href="mailto:manish@example.com" class="contact-link">
+          <span class="c-icon">✉</span>manish@example.com
+        </a>
+        <a href="https://github.com/manish" class="contact-link">
+          <span class="c-icon">⌥</span>github.com/manish
+        </a>
+        <a href="https://linkedin.com/in/manish" class="contact-link">
+          <span class="c-icon">◈</span>linkedin.com/in/manish
+        </a>
+        <a href="https://findy-code.io" class="contact-link">
+          <span class="c-icon">◉</span>Findy / BizReach profile
+        </a>
+      </div>
+    </section>
+
+    <div class="footer-pad"></div>
+  </main>
+
+</div>
+
+<script type="module" src="/src/main.ts"></script>
+</body>
+</html>
