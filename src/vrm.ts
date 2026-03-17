@@ -189,25 +189,37 @@ export function initVRM(): void {
       smoothYaw   += (targetYaw   - smoothYaw)   * Math.min(dt * 6, 1)
       smoothPitch += (targetPitch - smoothPitch) * Math.min(dt * 6, 1)
 
-      if (vrm.lookAt?.applier) {
-        vrm.lookAt.applier.applyYawPitch(smoothYaw, smoothPitch)
-      }
-
       vrm.scene.position.y = -0.9 + Math.sin(elapsed * 1.1) * 0.005
       vrm.scene.rotation.y = Math.PI + Math.sin(elapsed * 0.35) * 0.025
 
       if (vrm.humanoid) {
-        const headTilt = (scrollPct - 0.5) * 0.25
+        const headTilt  = (scrollPct - 0.5) * 0.25
+        const yawRad    = (smoothYaw   * Math.PI) / 180
+        const pitchRad  = (smoothPitch * Math.PI) / 180
+
         const head  = vrm.humanoid.getNormalizedBoneNode('head')
         const neck  = vrm.humanoid.getNormalizedBoneNode('neck')
         const spine = vrm.humanoid.getNormalizedBoneNode('spine')
-        if (head)  head.rotation.x  = lerp(head.rotation.x,  headTilt * 0.6,  dt * 2)
-        if (neck)  neck.rotation.x  = lerp(neck.rotation.x,  headTilt * 0.3,  dt * 2)
+
+        // scroll tilt + mouse pitch on head X
+        if (head) {
+          head.rotation.x = lerp(head.rotation.x, pitchRad * 0.25 + headTilt * 0.6, dt * 8)
+          head.rotation.y = lerp(head.rotation.y, yawRad * 0.35, dt * 8)
+        }
+        if (neck) {
+          neck.rotation.x = lerp(neck.rotation.x, pitchRad * 0.15 + headTilt * 0.3, dt * 8)
+          neck.rotation.y = lerp(neck.rotation.y, yawRad * 0.25, dt * 8)
+        }
         if (spine) spine.rotation.x = lerp(spine.rotation.x, headTilt * 0.15, dt * 1.5)
       }
 
+      // update VRM first, then apply eye tracking so it is not overridden
       if (vrm.lookAt) { vrm.lookAt.target = null; vrm.lookAt.autoUpdate = false }
       vrm.update(dt)
+
+      if (vrm.lookAt?.applier) {
+        vrm.lookAt.applier.applyYawPitch(smoothYaw, smoothPitch)
+      }
     }
 
     renderer.render(scene, camera)
